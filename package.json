@@ -1,0 +1,17 @@
+{
+  "name": "japanese-address-geocoding",
+  "version": "1.0.0",
+  "description": "japanese address geocoding with elasticsearcn",
+  "main": "index.js",
+  "scripts": {
+    "setup": "npx zx setup/index.mjx"
+  },
+  "author": "ryo-rm",
+  "license": "MIT",
+  "dependencies": {
+    "@elastic/elasticsearch": "^7.12.0",
+    "csv-parse": "^4.15.4",
+    "glob": "^7.1.7",
+    "iconv-lite": "^0.6.2"
+  }
+}

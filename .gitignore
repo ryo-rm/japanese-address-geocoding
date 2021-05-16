@@ -1,0 +1,7 @@
+.DS_Store
+*.csv
+*.zip
+*.ndjson
+node_modules/
+setup/scripts/zip/
+setup/scripts/csv/
