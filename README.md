@@ -6,6 +6,7 @@ Elasticsearchのアナライザー設定等は仮です。
 # セットアップ方法
 
 ```sh
+$ npm install -g zx
 $ docker compose build
 $ docker compose up -d
 $ npm install
