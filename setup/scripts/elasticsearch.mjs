@@ -1,7 +1,9 @@
 #!/usr/bin/env zx
 
+// @ts-check
+
 import { Client } from "@elastic/elasticsearch";
-import csv from "csv-parse";
+import { parse } from "csv-parse";
 import glob from "glob";
 import { createReadStream } from "fs";
 
@@ -31,6 +33,7 @@ await client.indices.create({
         },
         filter: {
           readingform: {
+            use_romaji: false,
             type: "kuromoji_readingform",
           },
           edge_ngram: {
@@ -43,19 +46,29 @@ await client.indices.create({
             lenient: true,
             synonyms: ["nippon, nihon"],
           },
+          address_stop_words: {
+            type: "stop",
+            stopwords: ["丁目", "番地", "-", "号"],
+          },
         },
         analyzer: {
           index_analyzer: {
             type: "custom",
             char_filter: ["normalize"],
             tokenizer: "kuromoji_normal",
-            filter: ["lowercase", "edge_ngram"],
+            filter: ["lowercase", "kuromoji_stemmer", "edge_ngram"],
+          },
+          index_analyzer_choumemoku: {
+            type: "custom",
+            char_filter: ["normalize"],
+            tokenizer: "kuromoji_normal",
+            filter: ["kuromoji_number", "kuromoji_stemmer", "address_stop_words"],
           },
           search_analyzer: {
             type: "custom",
             char_filter: ["normalize"],
-            tokenizer: "kuromoji_normal",
-            filter: ["lowercase"],
+            tokenizer: "kuromoji_search",
+            filter: ["lowercase", "kuromoji_number", "kuromoji_stemmer", "address_stop_words"],
           },
         },
       },
@@ -80,18 +93,17 @@ await client.indices.create({
         address_level_3: {
           type: "text",
           search_analyzer: "search_analyzer",
-          analyzer: "index_analyzer",
+          analyzer: "index_analyzer_choumemoku",
         },
         address_level_4: {
           type: "text",
           search_analyzer: "search_analyzer",
-          analyzer: "index_analyzer",
+          analyzer: "index_analyzer_choumemoku",
         },
         address_level_5: {
           type: "text",
-          boost: 0.1,
           search_analyzer: "search_analyzer",
-          analyzer: "index_analyzer",
+          analyzer: "index_analyzer_choumemoku",
         },
         location: { type: "geo_point" },
       },
@@ -124,7 +136,7 @@ async function* dataStream() {
   for (const csvFileName of csvList) {
     const istream = createReadStream(csvFileName, "utf8");
     const parser = istream.pipe(
-      csv({
+      parse({
         columns: true,
       })
     );
